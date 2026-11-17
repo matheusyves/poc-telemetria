@@ -1,0 +1,53 @@
+name: Telemetry POC
+
+on:
+  workflow_dispatch:
+    inputs:
+      simulate_failure:
+        description: "Cria uma falha sintética para validar a captura no cenário de erro"
+        type: boolean
+        default: false
+      export_otlp:
+        description: "Exporta traces para o endpoint OTLP configurado nos secrets"
+        type: boolean
+        default: false
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  telemetry-poc:
+    name: Build, teste e evidências de telemetria
+    runs-on: ubuntu-latest
+    env:
+      TELEMETRY_DIR: telemetry-evidence
+      OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: ${{ inputs.export_otlp && secrets.OTEL_EXPORTER_OTLP_TRACES_ENDPOINT || '' }}
+      OTEL_EXPORTER_OTLP_HEADERS: ${{ inputs.export_otlp && secrets.OTEL_EXPORTER_OTLP_HEADERS || '' }}
+      TELEMETRY_EXPORT_REQUIRED: ${{ vars.TELEMETRY_EXPORT_REQUIRED || 'false' }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Executar esteira instrumentada
+        id: pipeline
+        env:
+          SIMULATE_FAILURE: ${{ inputs.simulate_failure || 'false' }}
+        run: |
+          chmod +x scripts/run-poc.sh
+          ./scripts/run-poc.sh
+
+      - name: Publicar resumo de telemetria
+        if: always()
+        run: python3 scripts/telemetry.py summary --github-summary "$GITHUB_STEP_SUMMARY"
+
+      - name: Anexar traços, métricas, logs e relatório
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: telemetry-evidence-${{ github.run_id }}
+          path: telemetry-evidence/
+          if-no-files-found: error
+          retention-days: 14
