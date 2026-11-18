@@ -4,6 +4,7 @@ const crypto = require('node:crypto');
 const fs = require('node:fs');
 
 const FAILURE_CONCLUSIONS = new Set(['failure', 'timed_out', 'startup_failure', 'action_required']);
+const WORKFLOW_DURATION_BUCKETS_SECONDS = [1, 5, 10, 15, 30, 45, 60, 120, 300, 600];
 
 function hash(value, size) {
   return crypto.createHash('sha256').update(String(value)).digest('hex').slice(0, size);
@@ -69,6 +70,40 @@ function durationSeconds(startedAt, endedAt) {
   return Number.isNaN(start) || Number.isNaN(end) ? 0 : Math.max(0, (end - start) / 1000);
 }
 
+function workflowMetricAttributes(repository, workflow, result, scope) {
+  return attributes({
+    repository,
+    workflow_name: workflow,
+    workflow_result: result,
+    workflow_scope: scope,
+  });
+}
+
+function executionMetricPoint(repository, workflow, result, scope, startedAt, endedAt) {
+  return {
+    attributes: workflowMetricAttributes(repository, workflow, result, scope),
+    startTimeUnixNano: nanos(startedAt, Date.now() * 1_000_000),
+    timeUnixNano: nanos(endedAt, Date.now() * 1_000_000),
+    asDouble: 1,
+  };
+}
+
+function durationHistogramPoint(repository, workflow, result, scope, startedAt, endedAt) {
+  const duration = durationSeconds(startedAt, endedAt);
+  const bucketIndex = WORKFLOW_DURATION_BUCKETS_SECONDS.findIndex((bound) => duration <= bound);
+  const bucketCounts = WORKFLOW_DURATION_BUCKETS_SECONDS.map((_, index) => String(index === bucketIndex ? 1 : 0));
+  bucketCounts.push(String(bucketIndex === -1 ? 1 : 0));
+  return {
+    attributes: workflowMetricAttributes(repository, workflow, result, scope),
+    startTimeUnixNano: nanos(startedAt, Date.now() * 1_000_000),
+    timeUnixNano: nanos(endedAt, Date.now() * 1_000_000),
+    count: '1',
+    sum: duration,
+    explicitBounds: WORKFLOW_DURATION_BUCKETS_SECONDS,
+    bucketCounts,
+  };
+}
+
 function buildSignals(run, jobs, serviceName) {
   const traceId = hash(`${run.repository.full_name}:${run.id}`, 32);
   const rootSpanId = hash(`${run.id}:pipeline`, 16);
@@ -99,6 +134,8 @@ function buildSignals(run, jobs, serviceName) {
   const logs = [{ timeUnixNano: root.endTimeUnixNano, severityNumber: result === 'success' ? 9 : 17, severityText: result === 'success' ? 'INFO' : 'ERROR', body: { stringValue: `Workflow ${run.name} completed with ${result}` }, traceId, spanId: rootSpanId, attributes: attributes({ 'cicd.pipeline.result': result, 'github.run.url': runUrl }) }];
   const workflowMetricPoints = [{ attributes: attributes({ repository: run.repository.full_name, workflow: run.name, result }), timeUnixNano: root.endTimeUnixNano, asDouble: durationSeconds(run.run_started_at || run.created_at, run.updated_at) }];
   const taskMetricPoints = [];
+  const executionMetricPoints = [executionMetricPoint(run.repository.full_name, run.name, result, 'delivery', run.run_started_at || run.created_at, run.updated_at)];
+  const durationHistogramPoints = [durationHistogramPoint(run.repository.full_name, run.name, result, 'delivery', run.run_started_at || run.created_at, run.updated_at)];
 
   for (const job of jobs) {
     const jobResult = normalizeResult(job.conclusion);
@@ -120,6 +157,8 @@ function buildSignals(run, jobs, serviceName) {
     }));
     logs.push({ timeUnixNano: nanos(job.completed_at, Date.now() * 1_000_000), severityNumber: jobResult === 'success' ? 9 : 17, severityText: jobResult === 'success' ? 'INFO' : 'ERROR', body: { stringValue: `Job ${job.name} completed with ${jobResult}` }, traceId, spanId: jobSpanId, attributes: attributes({ 'cicd.pipeline.name': run.name, 'cicd.pipeline.task.name': job.name, 'cicd.pipeline.task.run.result': jobResult, 'github.job.url': jobUrl }) });
     taskMetricPoints.push({ attributes: attributes({ repository: run.repository.full_name, workflow: run.name, task: job.name, result: jobResult }), timeUnixNano: nanos(job.completed_at, Date.now() * 1_000_000), asDouble: durationSeconds(job.started_at, job.completed_at) });
+    executionMetricPoints.push(executionMetricPoint(run.repository.full_name, job.name, jobResult, 'stage', job.started_at || run.run_started_at, job.completed_at || run.updated_at));
+    durationHistogramPoints.push(durationHistogramPoint(run.repository.full_name, job.name, jobResult, 'stage', job.started_at || run.run_started_at, job.completed_at || run.updated_at));
 
     for (const step of job.steps || []) {
       const stepResult = normalizeResult(step.conclusion);
@@ -144,6 +183,8 @@ function buildSignals(run, jobs, serviceName) {
   const metrics = { resourceMetrics: [{ resource: { attributes: attributes(resource) }, scopeMetrics: [{ scope: { name: 'github-actions-workflow-telemetry', version: '1.0.0' }, metrics: [
     { name: 'cicd.pipeline.run.duration', description: 'Workflow completion duration in seconds.', unit: 's', gauge: { dataPoints: workflowMetricPoints } },
     { name: 'cicd.pipeline.task.run.duration', description: 'Workflow task completion duration in seconds.', unit: 's', gauge: { dataPoints: taskMetricPoints } },
+    { name: 'cicd.workflow.executions', description: 'Completed CI/CD workflow executions.', unit: '1', sum: { aggregationTemporality: 1, isMonotonic: true, dataPoints: executionMetricPoints } },
+    { name: 'cicd.workflow.duration', description: 'CI/CD workflow execution duration in seconds.', unit: 's', histogram: { aggregationTemporality: 1, dataPoints: durationHistogramPoints } },
   ] }] }] };
   const logPayload = { resourceLogs: [{ resource: { attributes: attributes(resource) }, scopeLogs: [{ scope: { name: 'github-actions-workflow-telemetry', version: '1.0.0' }, logRecords: logs }] }] };
   return { traceId, spans, traces, metrics, logs: logPayload, result };

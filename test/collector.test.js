@@ -20,6 +20,14 @@ test('builds one trace across run, jobs and steps', () => {
   const taskAttributes = Object.fromEntries(signals.spans[1].attributes.map((attribute) => [attribute.key, attribute.value.stringValue || attribute.value.intValue]));
   assert.equal(taskAttributes['cicd.pipeline.name'], 'Delivery pipeline');
   assert.equal(taskAttributes['cicd.pipeline.run.id'], '42');
+  const metrics = signals.metrics.resourceMetrics[0].scopeMetrics[0].metrics;
+  const executions = metrics.find((metric) => metric.name === 'cicd.workflow.executions');
+  const durations = metrics.find((metric) => metric.name === 'cicd.workflow.duration');
+  assert.equal(executions.sum.dataPoints.length, 2);
+  assert.equal(executions.sum.aggregationTemporality, 1);
+  assert.equal(durations.histogram.dataPoints.length, 2);
+  assert.equal(durations.histogram.dataPoints[1].count, '1');
+  assert.equal(durations.histogram.dataPoints[1].bucketCounts.reduce((sum, value) => sum + Number(value), 0), 1);
 });
 
 test('preserves cancellation and derives endpoints', () => {
