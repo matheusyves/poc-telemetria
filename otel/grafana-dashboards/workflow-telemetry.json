@@ -249,34 +249,34 @@
     },
     {
       "type": "stat",
-      "title": "p95 da esteira",
-      "description": "95% das execuções devem terminar abaixo deste tempo. Alvo demonstrativo: 60 s.",
+      "title": "p95 das etapas",
+      "description": "95% das execuções de Qualidade, Segurança, Build e Deploy devem terminar abaixo deste tempo. Alvo demonstrativo: 60 s.",
       "id": 61,
       "gridPos": { "h": 6, "w": 6, "x": 0, "y": 52 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "targets": [{ "expr": "histogram_quantile(0.95, sum by (le) (traces_span_metrics_duration_milliseconds_bucket{span_name=~\"RUN .*\"}))", "refId": "A" }],
+      "targets": [{ "expr": "histogram_quantile(0.95, sum by (le) (traces_span_metrics_duration_milliseconds_bucket{span_name=~\"TASK .*\"}))", "refId": "A" }],
       "options": { "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "colorMode": "background" },
       "fieldConfig": { "defaults": { "unit": "ms", "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "orange", "value": 45000 }, { "color": "red", "value": 60000 }] } }, "overrides": [] }
     },
     {
       "type": "stat",
-      "title": "SLO de entrega",
-      "description": "Percentual de execuções bem-sucedidas. Meta corporativa: 95%.",
+      "title": "SLO dos workflows",
+      "description": "Percentual de execuções bem-sucedidas de Qualidade, Segurança, Build e Deploy. Meta corporativa: 95%.",
       "id": 62,
       "gridPos": { "h": 6, "w": 6, "x": 6, "y": 52 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "targets": [{ "expr": "100 * sum(traces_span_metrics_calls_total{span_name=~\"RUN .*\",status_code=\"STATUS_CODE_OK\"}) / sum(traces_span_metrics_calls_total{span_name=~\"RUN .*\"})", "refId": "A" }],
+      "targets": [{ "expr": "100 * sum(traces_span_metrics_calls_total{span_name=~\"TASK .*\",status_code=\"STATUS_CODE_OK\"}) / sum(traces_span_metrics_calls_total{span_name=~\"TASK .*\"})", "refId": "A" }],
       "options": { "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "colorMode": "background" },
       "fieldConfig": { "defaults": { "unit": "percent", "thresholds": { "mode": "absolute", "steps": [{ "color": "red", "value": null }, { "color": "orange", "value": 80 }, { "color": "green", "value": 95 }] } }, "overrides": [] }
     },
     {
       "type": "stat",
       "title": "Falhas acumuladas",
-      "description": "Execuções que exigiram investigação desde a inicialização do Collector.",
+      "description": "Etapas que exigiram investigação desde a inicialização do Collector.",
       "id": 63,
       "gridPos": { "h": 6, "w": 6, "x": 12, "y": 52 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "targets": [{ "expr": "sum(traces_span_metrics_calls_total{span_name=~\"RUN .*\",status_code=\"STATUS_CODE_ERROR\"})", "refId": "A" }],
+      "targets": [{ "expr": "sum(traces_span_metrics_calls_total{span_name=~\"TASK .*\",status_code=\"STATUS_CODE_ERROR\"})", "refId": "A" }],
       "options": { "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "colorMode": "background" },
       "fieldConfig": { "defaults": { "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "red", "value": 1 }] } }, "overrides": [] }
     },
@@ -287,19 +287,19 @@
       "gridPos": { "h": 6, "w": 6, "x": 18, "y": 52 },
       "options": {
         "mode": "markdown",
-        "content": "### Quando houver falha\n\n1. Localize a etapa vermelha.\n2. Abra o evento no Loki e copie o `trace_id`.\n3. Pesquise o trace no Tempo.\n4. Use a URL do job para atuar no GitHub Actions.\n\n**SLO alvo:** sucesso ≥ 95% · p95 < 60 s"
+        "content": "### Quando houver falha\n\n1. Localize a etapa vermelha.\n2. Abra o evento no Loki e copie o `trace_id`.\n3. Pesquise o trace no Tempo.\n4. Use a URL do job para atuar no GitHub Actions.\n\n**SLO alvo por workflow:** sucesso ≥ 95% · p95 < 60 s"
       }
     },
     {
       "type": "timeseries",
-      "title": "Cadência de execuções por resultado",
-      "description": "Incrementos de sucesso e falha por intervalo; evidencia regressões e incidentes recorrentes.",
+      "title": "Cadência das etapas por resultado",
+      "description": "Incrementos de sucesso e falha de Qualidade, Segurança, Build e Deploy; evidencia regressões e incidentes recorrentes.",
       "id": 65,
       "gridPos": { "h": 9, "w": 12, "x": 0, "y": 59 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "targets": [
-        { "expr": "sum(increase(traces_span_metrics_calls_total{span_name=~\"RUN .*\",status_code=\"STATUS_CODE_OK\"}[$__rate_interval]))", "legendFormat": "Sucessos", "refId": "A" },
-        { "expr": "sum(increase(traces_span_metrics_calls_total{span_name=~\"RUN .*\",status_code=\"STATUS_CODE_ERROR\"}[$__rate_interval]))", "legendFormat": "Falhas", "refId": "B" }
+        { "expr": "sum(increase(traces_span_metrics_calls_total{span_name=~\"TASK .*\",status_code=\"STATUS_CODE_OK\"}[$__rate_interval]))", "legendFormat": "Sucessos", "refId": "A" },
+        { "expr": "sum(increase(traces_span_metrics_calls_total{span_name=~\"TASK .*\",status_code=\"STATUS_CODE_ERROR\"}[$__rate_interval]))", "legendFormat": "Falhas", "refId": "B" }
       ],
       "options": { "legend": { "calcs": ["sum"], "displayMode": "table", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "multi", "sort": "desc" } },
       "fieldConfig": {
