@@ -1,0 +1,40 @@
+name: Workflow OpenTelemetry exporter
+description: Reconstrói uma execução do GitHub Actions e exporta traces, métricas e logs por OTLP/HTTP.
+author: Platform Engineering
+
+inputs:
+  github-token:
+    description: Token com permissão actions:read para consultar o run e seus jobs.
+    required: true
+  repository:
+    description: Repositório alvo no formato owner/repository.
+    required: true
+  run-id:
+    description: Identificador numérico da execução a ser coletada.
+    required: true
+  otlp-endpoint:
+    description: Endpoint base OTLP/HTTP, sem /v1/traces (por exemplo, https://collector.example/otlp).
+    required: false
+  otlp-headers:
+    description: Cabeçalhos OTLP no formato chave=valor,chave2=valor2.
+    required: false
+  service-name:
+    description: service.name atribuído aos sinais OTEL.
+    required: false
+    default: github-actions-workflow-telemetry
+  export-required:
+    description: Faz a action falhar quando não houver endpoint ou a exportação falhar.
+    required: false
+    default: 'false'
+
+outputs:
+  trace-id:
+    description: Trace ID determinístico criado para o workflow run.
+  span-count:
+    description: Quantidade de spans exportados.
+  export-status:
+    description: Resultado da exportação OTLP.
+
+runs:
+  using: node24
+  main: dist/index.js

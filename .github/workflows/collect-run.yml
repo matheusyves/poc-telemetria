@@ -1,0 +1,52 @@
+name: Collect workflow run telemetry
+
+on:
+  workflow_call:
+    inputs:
+      repository:
+        description: Repositório owner/name que originou a execução.
+        required: true
+        type: string
+      run-id:
+        description: ID da execução do GitHub Actions.
+        required: true
+        type: string
+      conclusion:
+        description: Conclusão recebida de workflow_run; usada para filtrar resultados terminais relevantes.
+        required: false
+        type: string
+    secrets:
+      OTLP_ENDPOINT:
+        required: false
+      OTLP_HEADERS:
+        required: false
+    outputs:
+      trace-id:
+        description: Identificador do trace OTEL criado para o run.
+        value: ${{ jobs.collect.outputs.trace-id }}
+      export-status:
+        description: Resultado dos três exports OTLP.
+        value: ${{ jobs.collect.outputs.export-status }}
+
+jobs:
+  collect:
+    # workflow_run dispara para qualquer conclusão; coletamos êxito, cancelamento e erros conhecidos.
+    if: >-
+      ${{ inputs.conclusion == '' || contains(fromJSON('["success","failure","cancelled","timed_out","startup_failure","action_required"]'), inputs.conclusion) }}
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+    outputs:
+      trace-id: ${{ steps.export.outputs.trace-id }}
+      export-status: ${{ steps.export.outputs.export-status }}
+    steps:
+      - name: Exportar run, jobs e steps como OTLP
+        id: export
+        uses: matheusyves/poc-telemetria@main
+        with:
+          github-token: ${{ github.token }}
+          repository: ${{ inputs.repository }}
+          run-id: ${{ inputs.run-id }}
+          otlp-endpoint: ${{ secrets.OTLP_ENDPOINT }}
+          otlp-headers: ${{ secrets.OTLP_HEADERS }}

@@ -3,3 +3,10 @@ artifacts/
 __pycache__/
 .pycache/
 *.py[cod]
+
+# Artefatos OTLP baixados para investigação local; não pertencem ao código.
+events.jsonl
+evidence.md
+metrics.prom
+state.json
+traces.otlp.json

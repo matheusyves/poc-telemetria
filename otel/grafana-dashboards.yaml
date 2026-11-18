@@ -1,0 +1,11 @@
+apiVersion: 1
+
+providers:
+  - name: workflow-telemetry
+    orgId: 1
+    folder: Workflow Telemetry
+    type: file
+    disableDeletion: false
+    editable: true
+    options:
+      path: /var/lib/grafana/dashboards
