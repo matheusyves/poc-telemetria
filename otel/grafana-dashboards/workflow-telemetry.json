@@ -4,7 +4,7 @@
   "panels": [
     {
       "type": "row",
-      "title": "Visão executiva — Delivery pipeline",
+      "title": "CoE Cloud e DevSecOps - Visão executiva",
       "collapsed": false,
       "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
       "id": 1,
@@ -61,7 +61,7 @@
     },
     {
       "type": "stat",
-      "title": "Builds aprovados",
+      "title": "Sucessos",
       "id": 11,
       "gridPos": { "h": 6, "w": 8, "x": 0, "y": 9 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
@@ -71,7 +71,7 @@
     },
     {
       "type": "stat",
-      "title": "Erros de build",
+      "title": "Erros",
       "id": 12,
       "gridPos": { "h": 6, "w": 8, "x": 8, "y": 9 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
@@ -101,7 +101,7 @@
     },
     {
       "type": "stat",
-      "title": "Qualidade aprovada",
+      "title": "Sucessos",
       "id": 21,
       "gridPos": { "h": 6, "w": 8, "x": 0, "y": 17 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
@@ -111,7 +111,7 @@
     },
     {
       "type": "stat",
-      "title": "Falhas de qualidade",
+      "title": "Erros",
       "id": 22,
       "gridPos": { "h": 6, "w": 8, "x": 8, "y": 17 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
@@ -140,7 +140,7 @@
     },
     {
       "type": "stat",
-      "title": "Scans aprovados",
+      "title": "Sucessos",
       "id": 31,
       "gridPos": { "h": 6, "w": 8, "x": 0, "y": 25 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
@@ -150,7 +150,7 @@
     },
     {
       "type": "stat",
-      "title": "Erros de segurança",
+      "title": "Erros",
       "id": 32,
       "gridPos": { "h": 6, "w": 8, "x": 8, "y": 25 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
@@ -179,7 +179,7 @@
     },
     {
       "type": "stat",
-      "title": "Deploys aprovados",
+      "title": "Sucessos",
       "id": 41,
       "gridPos": { "h": 6, "w": 8, "x": 0, "y": 33 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
@@ -189,7 +189,7 @@
     },
     {
       "type": "stat",
-      "title": "Falhas de deploy",
+      "title": "Erros",
       "id": 42,
       "gridPos": { "h": 6, "w": 8, "x": 8, "y": 33 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
@@ -223,7 +223,7 @@
       "id": 51,
       "gridPos": { "h": 9, "w": 10, "x": 0, "y": 41 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "targets": [{ "expr": "sum by (span_name) (traces_span_metrics_calls_total{span_name=~\"TASK .*\",status_code=\"STATUS_CODE_ERROR\"})", "refId": "A" }],
+      "targets": [{ "expr": "sum by (span_name) (traces_span_metrics_calls_total{span_name=~\"TASK .*\",status_code=\"STATUS_CODE_ERROR\"})", "legendFormat": "{{span_name}}", "refId": "A" }],
       "options": { "orientation": "horizontal", "displayMode": "gradient", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "showUnfilled": true },
       "fieldConfig": { "defaults": { "color": { "mode": "fixed", "fixedColor": "red" }, "thresholds": { "mode": "absolute", "steps": [{ "color": "red", "value": null }] } }, "overrides": [] }
     },
