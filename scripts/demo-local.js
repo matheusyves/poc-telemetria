@@ -25,10 +25,32 @@ function scenario(id, conclusion, jobs, offset) {
   };
 }
 
+function workflowJob(runId, ordinal, name, conclusion, offset) {
+  return job(runId * 10 + ordinal, name, conclusion, offset);
+}
+
+function fullRun(runId, conclusion, offset, failingTask = '') {
+  return scenario(runId, conclusion, [
+    workflowJob(runId, 1, 'quality', failingTask === 'quality' ? 'failure' : 'success', offset),
+    ...(failingTask === 'quality' ? [] : [
+      workflowJob(runId, 2, 'build-android', failingTask === 'build-android' ? 'failure' : 'success', offset + 10),
+      workflowJob(runId, 3, 'security', failingTask === 'security' ? 'failure' : 'success', offset + 20),
+      ...(failingTask === 'build-android' || failingTask === 'security' ? [] : [workflowJob(runId, 4, 'deploy', failingTask === 'deploy' ? 'failure' : 'success', offset + 30)]),
+    ]),
+  ], offset);
+}
+
 const runs = [
-  scenario(runBase + 1, 'success', [job(runBase + 11, 'quality', 'success', -180), job(runBase + 12, 'build-android', 'success', -170), job(runBase + 13, 'security', 'success', -160), job(runBase + 14, 'deploy', 'success', -150)], -180),
-  scenario(runBase + 2, 'failure', [job(runBase + 21, 'quality', 'failure', -120)], -120),
-  scenario(runBase + 3, 'failure', [job(runBase + 31, 'quality', 'success', -60), job(runBase + 32, 'build-android', 'success', -50), job(runBase + 33, 'security', 'success', -40), job(runBase + 34, 'deploy', 'failure', -30)], -60),
+  fullRun(runBase + 1, 'success', -600),
+  fullRun(runBase + 2, 'failure', -540, 'quality'),
+  fullRun(runBase + 3, 'failure', -480, 'build-android'),
+  fullRun(runBase + 4, 'failure', -420, 'security'),
+  fullRun(runBase + 5, 'failure', -360, 'deploy'),
+  fullRun(runBase + 6, 'success', -300),
+  fullRun(runBase + 7, 'failure', -240, 'quality'),
+  fullRun(runBase + 8, 'failure', -180, 'build-android'),
+  fullRun(runBase + 9, 'failure', -120, 'deploy'),
+  scenario(runBase + 10, 'cancelled', [workflowJob(runBase + 10, 1, 'quality', 'cancelled', -60)], -60),
 ];
 
 (async () => {

@@ -60,11 +60,7 @@ docker compose -f docker-compose.observability.yml up -d
 node scripts/demo-local.js
 ```
 
-Abra [Grafana](http://localhost:3000) com `admin` / `admin`. O dashboard **Workflow Telemetry** contém métricas no Prometheus e logs no Loki; traces estão disponíveis no datasource Tempo. O script publica três execuções demonstrativas:
-
-1. sucesso completo;
-2. falha de qualidade;
-3. falha de deploy.
+Abra [Grafana](http://localhost:3000) com `admin` / `admin`. O dashboard **Workflow Telemetry** contém métricas no Prometheus e logs no Loki; traces estão disponíveis no datasource Tempo. O script publica dez execuções demonstrativas, incluindo sucesso, falhas de qualidade, build, segurança e deploy, além de cancelamento. Isso alimenta todos os indicadores de plataforma.
 
 Pare a stack com:
 
