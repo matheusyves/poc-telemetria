@@ -54,10 +54,17 @@ const mixedRuns = [
   scenario(runBase + 10, 'cancelled', [workflowJob(runBase + 10, 1, 'quality', 'cancelled', -60)], -60),
 ];
 
-function sloRuns(successCount) {
+function corporateRuns(successCount) {
   const successes = Array.from({ length: successCount }, (_, index) => {
+    const runId = runBase + index + 1;
     const offset = -((successCount + 1 - index) * 60);
-    return fullRun(runBase + index + 1, 'success', offset);
+    // Em uma esteira real, checks de qualidade e segurança ocorrem com maior
+    // frequência; build e deploy dependem de gates e chegam a menos commits.
+    const jobs = [workflowJob(runId, 1, 'quality', 'success', offset)];
+    if (index < 17) jobs.push(workflowJob(runId, 2, 'security', 'success', offset + 10));
+    if (index < 11) jobs.push(workflowJob(runId, 3, 'build-android', 'success', offset + 20));
+    if (index < 5) jobs.push(workflowJob(runId, 4, 'deploy', 'success', offset + 30));
+    return scenario(runId, 'success', jobs, offset);
   });
   const failedRunId = runBase + successCount + 1;
   const incident = scenario(failedRunId, 'failure', [
@@ -69,7 +76,9 @@ function sloRuns(successCount) {
   return [...successes, incident];
 }
 
-const runs = profile === 'slo' ? sloRuns(Number(process.env.DEMO_SUCCESS_RUNS || 19)) : mixedRuns;
+const runs = profile === 'corporate' || profile === 'slo'
+  ? corporateRuns(Number(process.env.DEMO_SUCCESS_RUNS || 19))
+  : mixedRuns;
 
 (async () => {
   const outcomes = { success: 0, failure: 0, cancellation: 0 };

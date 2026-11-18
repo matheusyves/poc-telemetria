@@ -70,11 +70,13 @@ docker compose -f docker-compose.observability.yml down
 
 Para receber dados de runners hospedados no GitHub, exponha o Collector por um endpoint HTTPS acessível pelos runners ou use um backend OTLP gerenciado. `localhost` serve exclusivamente à demonstração local.
 
-Para semear um cenário de SLO com 20 execuções — 19 sucessos e um incidente sintético que evidencia erros em todos os workflows — use:
+Para semear um cenário corporativo com 20 deliveries — 19 sucessos e um incidente sintético que evidencia erros em todos os workflows — use:
 
 ```bash
-DEMO_PROFILE=slo node scripts/demo-local.js
+DEMO_PROFILE=corporate node scripts/demo-local.js
 ```
+
+O perfil produz 56 execuções de workflows: Qualidade (20), Segurança (18), Build Android (12) e Deploy (6). O SLO de entrega é calculado sobre as 20 deliveries-raiz, enquanto a visão executiva soma as execuções das etapas.
 
 ## Desenvolvimento e release
 
