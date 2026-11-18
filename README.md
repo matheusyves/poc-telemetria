@@ -16,7 +16,7 @@ RUN Delivery pipeline
 └─ TASK deploy-staging
 ```
 
-Os spans usam as convenções CI/CD do OpenTelemetry (`cicd.pipeline.*`), são ligados à URL do run/job no GitHub e preservam resultados `success`, `failure`, `cancellation`, `timeout` e `error`. São enviados três sinais OTLP: traces, métricas de duração e logs de conclusão.
+Os spans usam as convenções CI/CD do OpenTelemetry (`cicd.pipeline.*`), são ligados à URL do run/job no GitHub e preservam resultados `success`, `failure`, `cancellation`, `timeout` e `error`. São enviados três sinais OTLP: traces, métricas de duração e logs de conclusão. O Collector também deriva contadores e histogramas diretamente dos spans para que o dashboard mantenha totais de runs, sem contar repetidamente os scrapes de um gauge.
 
 ## Consumo em outro repositório
 

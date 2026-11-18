@@ -4,10 +4,10 @@
   "panels": [
     {
       "datasource": {"type": "prometheus", "uid": "prometheus"},
-      "fieldConfig": {"defaults": {"unit": "s"}, "overrides": []},
+      "fieldConfig": {"defaults": {"unit": "ms"}, "overrides": []},
       "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
       "id": 1,
-      "targets": [{"expr": "avg by (workflow) (cicd_pipeline_run_duration_seconds{task!~\".+\"})", "refId": "A"}],
+      "targets": [{"expr": "sum by (cicd_pipeline_name) (traces_span_metrics_duration_milliseconds_sum{span_name=~\"RUN .*\"}) / sum by (cicd_pipeline_name) (traces_span_metrics_duration_milliseconds_count{span_name=~\"RUN .*\"})", "refId": "A"}],
       "title": "Duração média por workflow",
       "type": "timeseries"
     },
@@ -16,8 +16,8 @@
       "fieldConfig": {"defaults": {"unit": "short"}, "overrides": []},
       "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
       "id": 2,
-      "targets": [{"expr": "count by (result) (cicd_pipeline_run_duration_seconds{task!~\".+\"})", "refId": "A"}],
-      "title": "Execuções por resultado",
+      "targets": [{"expr": "sum by (cicd_pipeline_result) (traces_span_metrics_calls_total{span_name=~\"RUN .*\"})", "refId": "A"}],
+      "title": "Execuções por resultado desde o início do Collector",
       "type": "bargauge"
     },
     {
