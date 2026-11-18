@@ -223,7 +223,7 @@
       "id": 51,
       "gridPos": { "h": 9, "w": 10, "x": 0, "y": 41 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "targets": [{ "expr": "sum by (span_name) (traces_span_metrics_calls_total{span_name=~\"TASK .*\",status_code=\"STATUS_CODE_ERROR\"})", "legendFormat": "{{span_name}}", "refId": "A" }],
+      "targets": [{ "expr": "label_replace(sum by (span_name) (traces_span_metrics_calls_total{span_name=~\"TASK .*\",status_code=\"STATUS_CODE_ERROR\"}), \"stage\", \"$1\", \"span_name\", \"TASK (.*)\")", "legendFormat": "{{stage}}", "refId": "A" }],
       "options": { "orientation": "horizontal", "displayMode": "gradient", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "showUnfilled": true },
       "fieldConfig": { "defaults": { "color": { "mode": "fixed", "fixedColor": "red" }, "thresholds": { "mode": "absolute", "steps": [{ "color": "red", "value": null }] } }, "overrides": [] }
     },
