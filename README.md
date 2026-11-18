@@ -70,6 +70,12 @@ docker compose -f docker-compose.observability.yml down
 
 Para receber dados de runners hospedados no GitHub, exponha o Collector por um endpoint HTTPS acessível pelos runners ou use um backend OTLP gerenciado. `localhost` serve exclusivamente à demonstração local.
 
+Para semear um cenário de SLO com 20 execuções — 19 sucessos e um incidente sintético que evidencia erros em todos os workflows — use:
+
+```bash
+DEMO_PROFILE=slo node scripts/demo-local.js
+```
+
 ## Desenvolvimento e release
 
 ```bash

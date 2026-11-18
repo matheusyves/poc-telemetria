@@ -5,6 +5,7 @@ const { buildSignals, exportSignals } = require('../src/collector');
 const endpoint = process.env.OTEL_EXPORTER_OTLP_ENDPOINT || 'http://localhost:4318';
 const now = Date.now();
 const runBase = Number(process.env.DEMO_RUN_BASE || Math.floor(now / 1000));
+const profile = process.env.DEMO_PROFILE || 'mixed';
 const timestamp = (offset) => new Date(now + offset * 1000).toISOString();
 
 function job(id, name, conclusion, offset) {
@@ -40,7 +41,7 @@ function fullRun(runId, conclusion, offset, failingTask = '') {
   ], offset);
 }
 
-const runs = [
+const mixedRuns = [
   fullRun(runBase + 1, 'success', -600),
   fullRun(runBase + 2, 'failure', -540, 'quality'),
   fullRun(runBase + 3, 'failure', -480, 'build-android'),
@@ -53,10 +54,30 @@ const runs = [
   scenario(runBase + 10, 'cancelled', [workflowJob(runBase + 10, 1, 'quality', 'cancelled', -60)], -60),
 ];
 
+function sloRuns(successCount) {
+  const successes = Array.from({ length: successCount }, (_, index) => {
+    const offset = -((successCount + 1 - index) * 60);
+    return fullRun(runBase + index + 1, 'success', offset);
+  });
+  const failedRunId = runBase + successCount + 1;
+  const incident = scenario(failedRunId, 'failure', [
+    workflowJob(failedRunId, 1, 'quality', 'failure', -60),
+    workflowJob(failedRunId, 2, 'build-android', 'failure', -50),
+    workflowJob(failedRunId, 3, 'security', 'failure', -40),
+    workflowJob(failedRunId, 4, 'deploy', 'failure', -30),
+  ], -60);
+  return [...successes, incident];
+}
+
+const runs = profile === 'slo' ? sloRuns(Number(process.env.DEMO_SUCCESS_RUNS || 19)) : mixedRuns;
+
 (async () => {
+  const outcomes = { success: 0, failure: 0, cancellation: 0 };
   for (const run of runs) {
     const signals = buildSignals(run, run.jobs, 'github-actions-workflow-telemetry');
     const status = await exportSignals(endpoint, process.env.OTEL_EXPORTER_OTLP_HEADERS || '', signals);
-    console.log(`${run.id}: ${signals.result}, trace=${signals.traceId}, ${status}`);
+    outcomes[signals.result] = (outcomes[signals.result] || 0) + 1;
+    if (runs.length <= 20) console.log(`${run.id}: ${signals.result}, trace=${signals.traceId}, ${status}`);
   }
+  console.log(`Generated ${runs.length} runs: ${JSON.stringify(outcomes)}`);
 })().catch((error) => { console.error(error); process.exitCode = 1; });
