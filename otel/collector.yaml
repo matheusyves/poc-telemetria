@@ -16,6 +16,10 @@ processors:
 connectors:
   # Deriva contadores e histogramas dos spans; adequado para tendências e alertas de CI/CD.
   spanmetrics:
+    histogram:
+      explicit:
+        # Esteiras têm granularidade de segundos/minutos, não de chamadas HTTP.
+        buckets: [100ms, 1s, 5s, 15s, 30s, 60s, 120s, 300s, 600s]
     dimensions:
       - name: cicd.pipeline.name
       - name: cicd.pipeline.result

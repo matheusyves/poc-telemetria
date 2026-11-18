@@ -108,6 +108,8 @@ function buildSignals(run, jobs, serviceName) {
       traceId, spanId: jobSpanId, parentSpanId: rootSpanId, name: `TASK ${job.name}`,
       startedAt: job.started_at || run.run_started_at, endedAt: job.completed_at || run.updated_at, result: jobResult,
       attrs: {
+        'cicd.pipeline.name': run.name,
+        'cicd.pipeline.run.id': run.id,
         'cicd.pipeline.task.name': job.name,
         'cicd.pipeline.task.run.id': job.id,
         'cicd.pipeline.task.run.url.full': jobUrl,
@@ -116,7 +118,7 @@ function buildSignals(run, jobs, serviceName) {
         'github.job.runner_group_name': job.runner_group_name,
       },
     }));
-    logs.push({ timeUnixNano: nanos(job.completed_at, Date.now() * 1_000_000), severityNumber: jobResult === 'success' ? 9 : 17, severityText: jobResult === 'success' ? 'INFO' : 'ERROR', body: { stringValue: `Job ${job.name} completed with ${jobResult}` }, traceId, spanId: jobSpanId, attributes: attributes({ 'cicd.pipeline.task.name': job.name, 'cicd.pipeline.task.run.result': jobResult, 'github.job.url': jobUrl }) });
+    logs.push({ timeUnixNano: nanos(job.completed_at, Date.now() * 1_000_000), severityNumber: jobResult === 'success' ? 9 : 17, severityText: jobResult === 'success' ? 'INFO' : 'ERROR', body: { stringValue: `Job ${job.name} completed with ${jobResult}` }, traceId, spanId: jobSpanId, attributes: attributes({ 'cicd.pipeline.name': run.name, 'cicd.pipeline.task.name': job.name, 'cicd.pipeline.task.run.result': jobResult, 'github.job.url': jobUrl }) });
     taskMetricPoints.push({ attributes: attributes({ repository: run.repository.full_name, workflow: run.name, task: job.name, result: jobResult }), timeUnixNano: nanos(job.completed_at, Date.now() * 1_000_000), asDouble: durationSeconds(job.started_at, job.completed_at) });
 
     for (const step of job.steps || []) {
@@ -126,6 +128,8 @@ function buildSignals(run, jobs, serviceName) {
         traceId, spanId: stepSpanId, parentSpanId: jobSpanId, name: `STEP ${step.name}`,
         startedAt: step.started_at || job.started_at, endedAt: step.completed_at || job.completed_at, result: stepResult,
         attrs: {
+          'cicd.pipeline.name': run.name,
+          'cicd.pipeline.run.id': run.id,
           'cicd.pipeline.task.name': step.name,
           'cicd.pipeline.task.run.id': `${job.id}:${step.number}`,
           'cicd.pipeline.task.run.url.full': jobUrl,

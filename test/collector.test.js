@@ -17,6 +17,9 @@ test('builds one trace across run, jobs and steps', () => {
   assert.equal(signals.result, 'failure');
   assert.equal(signals.traces.resourceSpans[0].scopeSpans[0].spans[0].name, 'RUN Delivery pipeline');
   assert.equal(signals.traces.resourceSpans[0].scopeSpans[0].spans[2].name, 'STEP Run quality gate');
+  const taskAttributes = Object.fromEntries(signals.spans[1].attributes.map((attribute) => [attribute.key, attribute.value.stringValue || attribute.value.intValue]));
+  assert.equal(taskAttributes['cicd.pipeline.name'], 'Delivery pipeline');
+  assert.equal(taskAttributes['cicd.pipeline.run.id'], '42');
 });
 
 test('preserves cancellation and derives endpoints', () => {
