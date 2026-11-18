@@ -24,7 +24,7 @@ test('builds one trace across run, jobs and steps', () => {
   const executions = metrics.find((metric) => metric.name === 'cicd.workflow.executions');
   const durations = metrics.find((metric) => metric.name === 'cicd.workflow.duration');
   assert.equal(executions.sum.dataPoints.length, 2);
-  assert.equal(executions.sum.aggregationTemporality, 1);
+  assert.equal(executions.sum.aggregationTemporality, 2);
   assert.equal(durations.histogram.dataPoints.length, 2);
   assert.equal(durations.histogram.dataPoints[1].count, '1');
   assert.equal(durations.histogram.dataPoints[1].bucketCounts.reduce((sum, value) => sum + Number(value), 0), 1);

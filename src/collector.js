@@ -183,8 +183,8 @@ function buildSignals(run, jobs, serviceName) {
   const metrics = { resourceMetrics: [{ resource: { attributes: attributes(resource) }, scopeMetrics: [{ scope: { name: 'github-actions-workflow-telemetry', version: '1.0.0' }, metrics: [
     { name: 'cicd.pipeline.run.duration', description: 'Workflow completion duration in seconds.', unit: 's', gauge: { dataPoints: workflowMetricPoints } },
     { name: 'cicd.pipeline.task.run.duration', description: 'Workflow task completion duration in seconds.', unit: 's', gauge: { dataPoints: taskMetricPoints } },
-    { name: 'cicd.workflow.executions', description: 'Completed CI/CD workflow executions.', unit: '1', sum: { aggregationTemporality: 1, isMonotonic: true, dataPoints: executionMetricPoints } },
-    { name: 'cicd.workflow.duration', description: 'CI/CD workflow execution duration in seconds.', unit: 's', histogram: { aggregationTemporality: 1, dataPoints: durationHistogramPoints } },
+    { name: 'cicd.workflow.executions', description: 'Completed CI/CD workflow executions.', unit: '1', sum: { aggregationTemporality: 2, isMonotonic: true, dataPoints: executionMetricPoints } },
+    { name: 'cicd.workflow.duration', description: 'CI/CD workflow execution duration in seconds.', unit: 's', histogram: { aggregationTemporality: 2, dataPoints: durationHistogramPoints } },
   ] }] }] };
   const logPayload = { resourceLogs: [{ resource: { attributes: attributes(resource) }, scopeLogs: [{ scope: { name: 'github-actions-workflow-telemetry', version: '1.0.0' }, logRecords: logs }] }] };
   return { traceId, spans, traces, metrics, logs: logPayload, result };
