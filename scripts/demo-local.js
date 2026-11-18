@@ -4,6 +4,7 @@ const { buildSignals, exportSignals } = require('../src/collector');
 
 const endpoint = process.env.OTEL_EXPORTER_OTLP_ENDPOINT || 'http://localhost:4318';
 const now = Date.now();
+const runBase = Number(process.env.DEMO_RUN_BASE || Math.floor(now / 1000));
 const timestamp = (offset) => new Date(now + offset * 1000).toISOString();
 
 function job(id, name, conclusion, offset) {
@@ -25,9 +26,9 @@ function scenario(id, conclusion, jobs, offset) {
 }
 
 const runs = [
-  scenario(1001, 'success', [job(1, 'quality', 'success', -180), job(2, 'build-android', 'success', -170), job(3, 'security', 'success', -160), job(4, 'deploy', 'success', -150)], -180),
-  scenario(1002, 'failure', [job(5, 'quality', 'failure', -120)], -120),
-  scenario(1003, 'failure', [job(6, 'quality', 'success', -60), job(7, 'build-android', 'success', -50), job(8, 'security', 'success', -40), job(9, 'deploy', 'failure', -30)], -60),
+  scenario(runBase + 1, 'success', [job(runBase + 11, 'quality', 'success', -180), job(runBase + 12, 'build-android', 'success', -170), job(runBase + 13, 'security', 'success', -160), job(runBase + 14, 'deploy', 'success', -150)], -180),
+  scenario(runBase + 2, 'failure', [job(runBase + 21, 'quality', 'failure', -120)], -120),
+  scenario(runBase + 3, 'failure', [job(runBase + 31, 'quality', 'success', -60), job(runBase + 32, 'build-android', 'success', -50), job(runBase + 33, 'security', 'success', -40), job(runBase + 34, 'deploy', 'failure', -30)], -60),
 ];
 
 (async () => {
